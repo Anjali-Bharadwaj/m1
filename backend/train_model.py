@@ -15,7 +15,7 @@ LEARNING_RATE = 0.001
 BATCH_SIZE = 16  # Reduce from 32 to 16
 
 MEMORY_SIZE = 2000
-EPISODES = 1000
+EPISODES = 500
 
 # DQN Agent
 class DQNAgent:
