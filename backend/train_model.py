@@ -1,94 +1,83 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import random
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
+import random
 from collections import deque
-from traffic_env import TrafficSignalEnv
+from traffic_env import TrafficSignalEnv  # Updated environment (without SUMO)
 
-# Define Deep Q-Network (DQN)
-class DQN(nn.Module):
-    def __init__(self, state_size, action_size):
-        super(DQN, self).__init__()
-        self.fc1 = nn.Linear(state_size, 24)
-        self.fc2 = nn.Linear(24, 24)
-        self.fc3 = nn.Linear(24, action_size)
+# Hyperparameters
+STATE_SIZE = 5   # Example state size (adjust based on your environment)
+ACTION_SIZE = 2  # Example actions: (0 = keep current light, 1 = change light)
+GAMMA = 0.95     # Discount factor
+LEARNING_RATE = 0.001
+BATCH_SIZE = 16  # Reduce from 32 to 16
 
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.fc3(x)
+MEMORY_SIZE = 2000
+EPISODES = 1000
 
-# Define DQN Agent
-class TrafficRLAgent:
+# DQN Agent
+class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = deque(maxlen=2000)
-        self.gamma = 0.95  # Discount factor
-        self.epsilon = 1.0  # Exploration rate
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
-        self.learning_rate = 0.001
-        self.model = DQN(state_size, action_size)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-
+        self.memory = deque(maxlen=MEMORY_SIZE)
+        self.model = self._build_model()
+    
+    def _build_model(self):
+        model = Sequential([
+            Dense(24, input_dim=self.state_size, activation="relu"),
+            Dense(24, activation="relu"),
+            Dense(self.action_size, activation="linear")  # Output: Q-values for each action
+        ])
+        model.compile(loss="mse", optimizer=Adam(learning_rate=LEARNING_RATE))
+        return model
+    
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    def act(self, state):
-        if np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_size)  # Random action (exploration)
-        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-        with torch.no_grad():
-            return torch.argmax(self.model(state_tensor)).item()  # Select best action (exploitation)
-
-    def train(self, batch_size=32):
-        if len(self.memory) < batch_size:
+    def act(self, state, epsilon):
+        if np.random.rand() <= epsilon:
+            return random.randrange(self.action_size)  # Explore: Random action
+        q_values = self.model.predict(state, verbose=0)
+        return np.argmax(q_values[0])  # Exploit: Best action
+    
+    def replay(self):
+        if len(self.memory) < BATCH_SIZE:
             return
-        batch = random.sample(self.memory, batch_size)
-
-        for state, action, reward, next_state, done in batch:
+        minibatch = random.sample(self.memory, BATCH_SIZE)
+        for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
-                with torch.no_grad():
-                    target += self.gamma * torch.max(self.model(torch.tensor(next_state, dtype=torch.float32))).item()
-
-            prediction = self.model(torch.tensor(state, dtype=torch.float32))
-            loss = nn.functional.mse_loss(prediction[action], torch.tensor(target))
-
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-# Initialize Environment and Agent
-env = TrafficSignalEnv()
-state_size = env.observation_space.shape[0]
-action_size = env.action_space.n
-agent = TrafficRLAgent(state_size, action_size)
+                target += GAMMA * np.amax(self.model.predict(next_state, verbose=0)[0])
+            target_f = self.model.predict(state, verbose=0)
+            target_f[0][action] = target
+            self.model.fit(state, target_f, epochs=1, verbose=0)
 
 # Train the Model
-for episode in range(200):
+env = TrafficSignalEnv()  # Custom environment
+agent = DQNAgent(STATE_SIZE, ACTION_SIZE)
+
+for episode in range(EPISODES):
     state = env.reset()
+    state = np.reshape(state, [1, STATE_SIZE])
     total_reward = 0
-
-    for step in range(50):
-        action = agent.act(state)
-        next_state, reward, done, _ = env.step(action)
+    done = False
+    
+    while not done:
+        action = agent.act(state, epsilon=0.1)  # Epsilon-greedy policy
+        next_state, reward, done = env.step(action)
+        next_state = np.reshape(next_state, [1, STATE_SIZE])
+        
         agent.remember(state, action, reward, next_state, done)
-
         state = next_state
         total_reward += reward
+    
+    agent.replay()
+    
+    print(f"Episode {episode+1}/{EPISODES}, Reward: {total_reward}")
 
-        if done:
-            break
-
-    agent.train()
-    agent.epsilon = max(agent.epsilon_min, agent.epsilon * agent.epsilon_decay)
-    print(f"Episode {episode}, Total Reward: {total_reward}")
-
-# Save Trained Model
-torch.save(agent.model.state_dict(), "models/traffic_rl_model.pth")
-print("Model saved successfully in models/traffic_rl_model.pth")
-
-env.close()
+# Save the trained model
+agent.model.save("backend/dqn_model.h5")
+print("Training complete. Model saved as dqn_model.h5")

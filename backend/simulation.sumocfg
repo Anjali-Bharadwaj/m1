@@ -1,8 +1,14 @@
-<additional>
-    <tlLogic id="A" type="static" programID="0" offset="0">
-        <phase duration="30" state="GrGr" />
-        <phase duration="5" state="yryr" />
-        <phase duration="30" state="rGrG" />
-        <phase duration="5" state="ryry" />
-    </tlLogic>
-</additional>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+    <input>
+        <net-file value="network.net.xml"/>
+        <route-files value="routes.rou.xml"/>
+        <additional-files value="traffic_lights.tll.xml"/>
+    </input>
+
+    <time>
+        <begin value="0"/>
+        <end value="1000"/>
+    </time>
+</configuration>

@@ -1,35 +1,40 @@
-import os
-import traci
 import numpy as np
-import gym
-from gym import spaces
+import random
 
-class TrafficSignalEnv(gym.Env):
+class TrafficSignalEnv:
     def __init__(self):
-        super(TrafficSignalEnv, self).__init__()
-        sumo_binary = "sumo"  # or "sumo-gui"
-        sumo_config = "backend/simulation.sumocfg"
-
-        traci.start([sumo_binary, "-c", sumo_config, "--start"])
-
-        self.action_space = spaces.Discrete(3)  # 3 possible traffic light states
-        self.observation_space = spaces.Box(low=0, high=100, shape=(2,), dtype=np.float32)
-
-    def step(self, action):
-        traci.trafficlight.setPhase("A", action)
-        traci.simulationStep()
-        waiting_time = sum(traci.edge.getWaitingTime(edge) for edge in traci.edge.getIDList())
-        num_vehicles = sum(traci.edge.getLastStepVehicleNumber(edge) for edge in traci.edge.getIDList())
-
-        reward = -waiting_time + (10 - num_vehicles)
-        state = np.array([waiting_time, num_vehicles], dtype=np.float32)
-        done = traci.simulation.getMinExpectedNumber() <= 0
-
-        return state, reward, done, {}
+        # Define environment parameters
+        self.state_size = 5  # Example: [traffic density, wait time, signal state, etc.]
+        self.action_size = 2  # Actions: 0 = keep current signal, 1 = change signal
+        self.state = np.random.rand(self.state_size)  # Initialize random state
+        self.time_step = 0
+        self.max_steps = 100  # Max steps per episode
 
     def reset(self):
-        traci.load(["-c", "backend/simulation.sumocfg"])
-        return np.array([0, 0], dtype=np.float32)
+        """ Reset the environment at the beginning of each episode """
+        self.state = np.random.rand(self.state_size)  # Reset state
+        self.time_step = 0
+        return self.state
 
-    def close(self):
-        traci.close()
+    def step(self, action):
+        """
+        Take an action in the environment.
+
+        :param action: 0 (keep signal) or 1 (change signal)
+        :return: next_state, reward, done
+        """
+        self.time_step += 1
+        reward = self._calculate_reward(action)
+        self.state = np.random.rand(self.state_size)  # Update state randomly for simplicity
+        done = self.time_step >= self.max_steps  # Stop when max steps reached
+        return self.state, reward, done
+
+    def _calculate_reward(self, action):
+        """
+        Reward function: Encourage efficient traffic management.
+        """
+        if action == 0:
+            reward = random.uniform(0, 1)  # Example reward for keeping signal
+        else:
+            reward = random.uniform(-1, 1)  # Example penalty for changing signal randomly
+        return reward

@@ -1,16 +1,12 @@
 {
   "dependencies": {
-    "@mapbox/mapbox-gl-directions": "^4.3.1",
     "@mapbox/mapbox-gl-geocoder": "^5.0.3",
-    "@mapbox/search-js-react": "^1.0.0",
-    "@react-google-maps/api": "^2.20.6",
-    "@vis.gl/react-google-maps": "^1.5.1",
-    "dotenv": "^16.4.0",
+    "leaflet": "^1.9.3",
     "mapbox-gl": "^3.10.0",
-    "next": "^15.1.7",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-map-gl": "^8.0.1"
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
     "@types/google.maps": "^3.58.1",
@@ -20,27 +16,10 @@
     "typescript": "^5.5.0"
   },
   "scripts": {
-    "dev": "next dev --dotenv .env.local",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint . --fix",
-    "format": "prettier --write ."
+    "start": "next start"
   },
-  
-    "name": "traffic-optimization",
-    "version": "1.0.0",
-    "scripts": {
-      "dev": "next dev",
-      "build": "next build",
-      "start": "next start"
-    },
-    "dependencies": {
-      "next": "latest",
-      "react": "latest",
-      "react-dom": "latest",
-      "leaflet": "^1.9.3",
-      "react-leaflet": "^4.2.1"
-    }
-  }
-  
-
+  "name": "traffic-optimization",
+  "version": "1.0.0"
+}
