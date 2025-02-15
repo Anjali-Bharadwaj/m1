@@ -2,4 +2,5 @@
 <nodes>
     <node id="A" x="0" y="0" type="traffic_light"/>
     <node id="B" x="1000" y="0"/>
+    
 </nodes>
