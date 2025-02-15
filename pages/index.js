@@ -1,12 +1,12 @@
 import dynamic from "next/dynamic";
 
-const MapComponent = dynamic(() => import("../components/MapComponent"), { ssr: false });
+const Map = dynamic(() => import("../components/Map"), { ssr: false });
 
 export default function Home() {
   return (
     <div>
-      <h1>Map with Directions</h1>
-      <MapComponent />
+      <h1 style={{ textAlign: "center", padding: "20px" }}>🚗 Live Traffic & Directions</h1>
+      <Map />
     </div>
   );
 }
