@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@react-google-maps/api": "^2.20.6",
     "@vis.gl/react-google-maps": "^1.5.1",
     "next": "^15.1.7",
     "react": "^19.0.0",
@@ -8,5 +9,10 @@
   "devDependencies": {
     "@types/google.maps": "^3.58.1",
     "@types/node": "^22.13.4"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   }
 }
