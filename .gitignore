@@ -1,6 +1,31 @@
-.vercel
+# Node.js dependencies
 node_modules/
+.next/
+.vercel/
+package-lock.json
+
+# Python dependencies
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+models/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# IDE & System files
+.DS_Store
+.vscode/
+
+__pycache__/
 node_modules/
-node_modules/
-node_modules/
-node_modules/
+models/*.pth
+.env.local
+package-lock.json
